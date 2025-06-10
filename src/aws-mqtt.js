@@ -1,5 +1,6 @@
 const mqtt = require('mqtt');
 const fs = require('fs');
+const { saveEnvironmentData } = require('./environment-logger');
 
 console.log('⌛ Conectando a AWS IoT Core...');
 
@@ -21,8 +22,15 @@ client.on('connect', () => {
   });
 });
 
-client.on('message', (topic, message) => {
-  console.log(`📥 ${topic}: ${message.toString()}`);
+client.on('message', async (topic, message) => {
+  const payload = message.toString();
+  console.log(`📥 ${topic}: ${payload}`);
+  try {
+    const data = JSON.parse(payload);
+    await saveEnvironmentData(data);
+  } catch (err) {
+    console.error('❌ Error procesando el mensaje:', err.message);
+  }
 });
 
 client.on('error', (err) => {
