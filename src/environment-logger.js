@@ -13,7 +13,14 @@ const EnvironmentLog = mongoose.model('EnvironmentLog', EnvironmentLogSchema);
 
 async function connect() {
   if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(uri);
+    console.log('🔌 Conectando a MongoDB...');
+    try {
+      await mongoose.connect(uri);
+      console.log('✅ Conexión a MongoDB establecida');
+    } catch (err) {
+      console.error('❌ Error al conectar a MongoDB:', err);
+      throw err;
+    }
   }
 }
 
@@ -25,6 +32,7 @@ async function saveEnvironmentData(data) {
   await connect();
   const log = new EnvironmentLog({ sensorId, temperature, humidity });
   await log.save();
+  console.log('💾 Datos guardados:', log.toObject());
 }
 
 module.exports = { saveEnvironmentData };

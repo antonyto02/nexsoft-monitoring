@@ -27,6 +27,7 @@ client.on('message', async (topic, message) => {
   console.log(`📥 ${topic}: ${payload}`);
   try {
     const data = JSON.parse(payload);
+    console.log('🗄 Guardando datos...');
     await saveEnvironmentData(data);
   } catch (err) {
     console.error('❌ Error procesando el mensaje:', err.message);
