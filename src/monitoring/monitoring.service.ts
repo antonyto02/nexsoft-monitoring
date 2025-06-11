@@ -17,6 +17,7 @@ import {
   EnvironmentWeeklySummary,
   EnvironmentWeeklySummaryDocument,
 } from './environment-weekly-summary.schema';
+import { Notification, NotificationDocument } from './notification.schema';
 
 interface FilterConfig {
   model: Model<any>;
@@ -39,6 +40,8 @@ export class MonitoringService {
     private readonly dailyModel: Model<EnvironmentDailySummaryDocument>,
     @InjectModel(EnvironmentWeeklySummary.name)
     private readonly weeklyModel: Model<EnvironmentWeeklySummaryDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
   ) {
     this.filterMap = {
       last_5min: {
@@ -103,6 +106,64 @@ export class MonitoringService {
       min: result.min,
       max: result.max,
       humidity: result.series,
+    };
+  }
+
+  async getNotifications(
+    sensorType = 'all',
+    readStatus = 'all',
+    page = 1,
+    limit = 20,
+  ) {
+    const allowedSensor = ['gas', 'vibration', 'all'];
+    const allowedStatus = ['read', 'unread', 'all'];
+
+    if (!allowedSensor.includes(sensorType)) {
+      throw new BadRequestException('Invalid sensor_type value');
+    }
+    if (!allowedStatus.includes(readStatus)) {
+      throw new BadRequestException('Invalid read_status value');
+    }
+
+    const filter: Record<string, unknown> = {};
+    if (sensorType !== 'all') {
+      filter.type = sensorType;
+    }
+    if (readStatus !== 'all') {
+      filter.status = readStatus;
+    }
+
+    const total = await this.notificationModel.countDocuments(filter).exec();
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 0;
+    const skip = (page - 1) * limit;
+
+    const docs = await this.notificationModel
+      .find(filter)
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    const notifications = docs.map((d) => ({
+      id: d._id.toString(),
+      sensor: d.type,
+      message: d.message,
+      timestamp: d.timestamp.toISOString(),
+      status: d.status,
+    }));
+
+    const nextPage = page < totalPages ? page + 1 : null;
+
+    return {
+      message: 'Data retrieved successfully',
+      notifications,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        next_page: nextPage,
+        limit,
+      },
     };
   }
 
