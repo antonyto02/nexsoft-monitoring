@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -165,6 +169,15 @@ export class MonitoringService {
         limit,
       },
     };
+  }
+
+  async markNotificationRead(id: string) {
+    const doc = await this.notificationModel
+      .findByIdAndUpdate(id, { status: 'read' }, { new: true })
+      .exec();
+    if (!doc) {
+      throw new NotFoundException('Notification not found');
+    }
   }
 
   private async getData(filter: string, type: 'temperature' | 'humidity') {

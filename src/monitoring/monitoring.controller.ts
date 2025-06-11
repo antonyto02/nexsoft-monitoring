@@ -1,4 +1,12 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Patch,
+  Param,
+  Body,
+  BadRequestException,
+} from '@nestjs/common';
 import { MonitoringService } from './monitoring.service';
 
 @Controller('monitoring')
@@ -30,5 +38,17 @@ export class MonitoringController {
       pageNum,
       limitNum,
     );
+  }
+
+  @Patch('notifications/:id')
+  async markNotificationRead(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    if (status !== 'read') {
+      throw new BadRequestException('Invalid status value');
+    }
+    await this.monitoringService.markNotificationRead(id);
+    return { message: 'Notificación marcada como leída' };
   }
 }
