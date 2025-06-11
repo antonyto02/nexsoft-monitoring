@@ -23,6 +23,11 @@ export class MonitoringController {
     return this.monitoringService.getHumidityGraph(filter);
   }
 
+  @Get('home')
+  getHome() {
+    return this.monitoringService.getHomeData();
+  }
+
   @Get('notifications')
   getNotifications(
     @Query('sensor_type') sensorType?: string,
