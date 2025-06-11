@@ -83,9 +83,7 @@ export class MonitoringService {
         tempField: 'temperature',
         humField: 'humidity',
         points: 13,
-      },  
-
-
+      },
     } as const;
   }
 
@@ -110,6 +108,39 @@ export class MonitoringService {
       min: result.min,
       max: result.max,
       humidity: result.series,
+    };
+  }
+
+  async getHomeData() {
+    const latest = await this.logModel
+      .findOne()
+      .sort({ timestamp: -1 })
+      .lean()
+      .exec();
+
+    const temp = latest?.temperature ?? null;
+    const hum = latest?.humidity ?? null;
+
+    const notifs = await this.notificationModel
+      .find({ status: 'unread' })
+      .sort({ timestamp: -1 })
+      .limit(5)
+      .lean()
+      .exec();
+
+    const unreadNotifications = notifs.map((n) => ({
+      id: n._id.toString(),
+      type: n.type,
+      message: n.message,
+      status: n.status,
+      timestamp: n.timestamp.toISOString(),
+    }));
+
+    return {
+      message: 'Data retrieved successfully',
+      temperature: temp,
+      humidity: hum,
+      unread_notifications: unreadNotifications,
     };
   }
 
