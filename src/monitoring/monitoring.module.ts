@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AwsMqttService } from './aws-mqtt.service';
 import { AggregationService } from './aggregation.service';
+import { MonitoringService } from './monitoring.service';
+import { MonitoringController } from './monitoring.controller';
 import { EnvironmentLog, EnvironmentLogSchema } from './environment-log.schema';
 import {
   EnvironmentHourlySummary,
@@ -20,11 +22,21 @@ import {
   imports: [
     MongooseModule.forFeature([
       { name: EnvironmentLog.name, schema: EnvironmentLogSchema },
-      { name: EnvironmentHourlySummary.name, schema: EnvironmentHourlySummarySchema },
-      { name: EnvironmentDailySummary.name, schema: EnvironmentDailySummarySchema },
-      { name: EnvironmentWeeklySummary.name, schema: EnvironmentWeeklySummarySchema },
+      {
+        name: EnvironmentHourlySummary.name,
+        schema: EnvironmentHourlySummarySchema,
+      },
+      {
+        name: EnvironmentDailySummary.name,
+        schema: EnvironmentDailySummarySchema,
+      },
+      {
+        name: EnvironmentWeeklySummary.name,
+        schema: EnvironmentWeeklySummarySchema,
+      },
     ]),
   ],
-  providers: [AwsMqttService, AggregationService],
+  providers: [AwsMqttService, AggregationService, MonitoringService],
+  controllers: [MonitoringController],
 })
 export class MonitoringModule {}
