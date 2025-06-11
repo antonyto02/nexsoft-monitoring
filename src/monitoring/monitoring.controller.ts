@@ -14,4 +14,21 @@ export class MonitoringController {
   getHumidity(@Query('filter') filter: string) {
     return this.monitoringService.getHumidityGraph(filter);
   }
+
+  @Get('notifications')
+  getNotifications(
+    @Query('sensor_type') sensorType?: string,
+    @Query('read_status') readStatus?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.monitoringService.getNotifications(
+      sensorType ?? 'all',
+      readStatus ?? 'all',
+      pageNum,
+      limitNum,
+    );
+  }
 }
