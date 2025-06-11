@@ -55,27 +55,30 @@ export class MonitoringService {
         humField: 'avgHumidity',
         points: 24,
       },
+
       last_week: {
         model: this.dailyModel,
-        timeField: 'day',
-        tempField: 'avgTemperature',
-        humField: 'avgHumidity',
+        timeField: 'timestamp',
+        tempField: 'temperature',
+        humField: 'humidity',
         points: 7,
       },
       last_month: {
         model: this.dailyModel,
-        timeField: 'day',
-        tempField: 'avgTemperature',
-        humField: 'avgHumidity',
+        timeField: 'timestamp',
+        tempField: 'temperature',
+        humField: 'humidity',
         points: 30,
       },
       last_3months: {
         model: this.weeklyModel,
-        timeField: 'weekStart',
-        tempField: 'avgTemperature',
-        humField: 'avgHumidity',
+        timeField: 'timestamp',
+        tempField: 'temperature',
+        humField: 'humidity',
         points: 13,
-      },
+      },  
+
+
     } as const;
   }
 
