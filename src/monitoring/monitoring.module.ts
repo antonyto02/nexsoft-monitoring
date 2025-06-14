@@ -18,6 +18,7 @@ import {
   EnvironmentWeeklySummarySchema,
 } from './environment-weekly-summary.schema';
 import { Notification, NotificationSchema } from './notification.schema';
+import { Status, StatusSchema } from './status.schema';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Notification, NotificationSchema } from './notification.schema';
         schema: EnvironmentWeeklySummarySchema,
       },
       { name: Notification.name, schema: NotificationSchema },
+      { name: Status.name, schema: StatusSchema },
     ]),
   ],
   providers: [AwsMqttService, AggregationService, MonitoringService],

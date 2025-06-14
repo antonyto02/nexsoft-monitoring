@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EnvironmentLog, EnvironmentLogDocument } from './environment-log.schema';
 import { Notification, NotificationDocument } from './notification.schema';
+import { Status, StatusDocument } from './status.schema';
 import * as mqtt from 'mqtt';
 import * as fs from 'fs';
 
@@ -15,6 +16,8 @@ export class AwsMqttService implements OnModuleInit {
     private readonly logModel: Model<EnvironmentLogDocument>,
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    @InjectModel(Status.name)
+    private readonly statusModel: Model<StatusDocument>,
   ) {}
 
   onModuleInit() {
@@ -36,7 +39,11 @@ export class AwsMqttService implements OnModuleInit {
     this.client.on('connect', () => {
       console.log('✅ Conectado a AWS IoT Core');
       this.client.subscribe(
-        ['nexsoft/monitoring/enviroment', 'nexsoft/monitoring/notifications'],
+        [
+          'nexsoft/monitoring/enviroment',
+          'nexsoft/monitoring/notifications',
+          'nexsoft/monitoring/status',
+        ],
         (err) => {
           if (err) console.error('❌ Error al suscribirse:', err);
           else console.log('📡 Suscrito a topics');
@@ -53,6 +60,8 @@ export class AwsMqttService implements OnModuleInit {
           await this.saveData(data);
         } else if (topic === 'nexsoft/monitoring/notifications') {
           await this.saveNotification(data);
+        } else if (topic === 'nexsoft/monitoring/status') {
+          await this.saveStatus(data);
         }
       } catch (err) {
         console.error('❌ Error procesando el mensaje:', err.message);
@@ -104,5 +113,17 @@ export class AwsMqttService implements OnModuleInit {
     } else {
       throw new Error('Invalid sensorId');
     }
+  }
+
+  private async saveStatus(data: any) {
+    const { sensorId, status } = data || {};
+    if (typeof sensorId !== 'string' || typeof status !== 'string') {
+      throw new Error('Invalid status payload');
+    }
+    await this.statusModel.create({
+      sensorId,
+      status,
+      timestamp: new Date().toISOString(),
+    });
   }
 }
