@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EnvironmentLog, EnvironmentLogDocument } from './environment-log.schema';
+import { Notification, NotificationDocument } from './notification.schema';
 import * as mqtt from 'mqtt';
 import * as fs from 'fs';
 
@@ -10,7 +11,10 @@ export class AwsMqttService implements OnModuleInit {
   private client: mqtt.MqttClient;
 
   constructor(
-    @InjectModel(EnvironmentLog.name) private readonly logModel: Model<EnvironmentLogDocument>,
+    @InjectModel(EnvironmentLog.name)
+    private readonly logModel: Model<EnvironmentLogDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
   onModuleInit() {
@@ -31,10 +35,13 @@ export class AwsMqttService implements OnModuleInit {
 
     this.client.on('connect', () => {
       console.log('✅ Conectado a AWS IoT Core');
-      this.client.subscribe('nexsoft/monitoring/enviroment', (err) => {
-        if (err) console.error('❌ Error al suscribirse:', err);
-        else console.log('📡 Suscrito al topic');
-      });
+      this.client.subscribe(
+        ['nexsoft/monitoring/enviroment', 'nexsoft/monitoring/notifications'],
+        (err) => {
+          if (err) console.error('❌ Error al suscribirse:', err);
+          else console.log('📡 Suscrito a topics');
+        },
+      );
     });
 
     this.client.on('message', async (topic, message) => {
@@ -42,7 +49,11 @@ export class AwsMqttService implements OnModuleInit {
       console.log(`📥 ${topic}: ${payload}`);
       try {
         const data = JSON.parse(payload);
-        await this.saveData(data);
+        if (topic === 'nexsoft/monitoring/enviroment') {
+          await this.saveData(data);
+        } else if (topic === 'nexsoft/monitoring/notifications') {
+          await this.saveNotification(data);
+        }
       } catch (err) {
         console.error('❌ Error procesando el mensaje:', err.message);
       }
@@ -63,5 +74,35 @@ export class AwsMqttService implements OnModuleInit {
       throw new Error('Invalid data payload');
     }
     await this.logModel.create({ sensorId, temperature, humidity });
+  }
+
+  private async saveNotification(data: any) {
+    const { sensorId } = data || {};
+    if (sensorId === 'esp32_mq2') {
+      const { value, gasDetected } = data;
+      if (typeof value !== 'number' || gasDetected !== true) {
+        throw new Error('Invalid gas notification payload');
+      }
+      await this.notificationModel.create({
+        type: 'Gas',
+        sensorId: 'MQ-2',
+        message: 'Gas peligroso detectado en el almacén',
+        ppm: value,
+        status: 'unread',
+      });
+    } else if (sensorId === 'esp32_vibration') {
+      const { alert } = data;
+      if (alert !== 'shock_detected') {
+        throw new Error('Invalid vibration notification payload');
+      }
+      await this.notificationModel.create({
+        type: 'Vibration',
+        sensorId: 'Shock_sensor',
+        message: 'Movimiento brusco detetcado en caja',
+        status: 'unread',
+      });
+    } else {
+      throw new Error('Invalid sensorId');
+    }
   }
 }
