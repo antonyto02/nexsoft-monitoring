@@ -24,12 +24,20 @@ export class AwsMqttService implements OnModuleInit {
     this.connect();
   }
 
-    private connect() {
+  private connect() {
     console.log('⌛ Conectando a AWS IoT Core...');
 
-    const key = Buffer.from(process.env.DEVICE_KEY, 'utf-8');
-    const cert = Buffer.from(process.env.DEVICE_CERT, 'utf-8');
-    const ca = Buffer.from(process.env.CA_CERT, 'utf-8');
+    const getEnvOrThrow = (name: string): string => {
+      const value = process.env[name];
+      if (!value) {
+        throw new Error(`❌ FALTA VARIABLE DE ENTORNO: ${name}`);
+      }
+      return value;
+    };
+
+    const key = Buffer.from(getEnvOrThrow('DEVICE_KEY'), 'utf-8');
+    const cert = Buffer.from(getEnvOrThrow('DEVICE_CERT'), 'utf-8');
+    const ca = Buffer.from(getEnvOrThrow('CA_CERT'), 'utf-8');
 
     this.client = mqtt.connect({
       host: 'a32p2sd11gkckn-ats.iot.us-east-2.amazonaws.com',
@@ -78,6 +86,7 @@ export class AwsMqttService implements OnModuleInit {
       console.error('❌ Error de conexión:', err);
     });
   }
+
 
   private async saveData(data: any) {
     const { sensorId, temperature, humidity } = data || {};
