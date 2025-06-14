@@ -27,7 +27,6 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/schedule": "^6.0.0",
     "cors": "^2.8.5",
     "mongoose": "^8.15.1",
     "mqtt": "^5.13.1",
