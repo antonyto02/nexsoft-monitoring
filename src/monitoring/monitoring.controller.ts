@@ -28,6 +28,11 @@ export class MonitoringController {
     return this.monitoringService.getHomeData();
   }
 
+  @Get('sensors-status')
+  getSensorsStatus() {
+    return this.monitoringService.getSensorsStatus();
+  }
+
   @Get('notifications')
   getNotifications(
     @Query('sensor_type') sensorType?: string,
