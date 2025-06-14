@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AwsMqttService } from './aws-mqtt.service';
-import { AggregationService } from './aggregation.service';
 import { MonitoringService } from './monitoring.service';
 import { MonitoringController } from './monitoring.controller';
 import { EnvironmentLog, EnvironmentLogSchema } from './environment-log.schema';
@@ -40,7 +39,7 @@ import { Status, StatusSchema } from './status.schema';
       { name: Status.name, schema: StatusSchema },
     ]),
   ],
-  providers: [AwsMqttService, AggregationService, MonitoringService],
+  providers: [AwsMqttService, MonitoringService],
   controllers: [MonitoringController],
 })
 export class MonitoringModule {}
