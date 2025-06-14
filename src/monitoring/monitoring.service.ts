@@ -57,9 +57,9 @@ export class MonitoringService {
       },
       '24h': {
         model: this.hourlyModel,
-        timeField: 'hour',
-        tempField: 'avgTemperature',
-        humField: 'avgHumidity',
+        timeField: 'timestamp',
+        tempField: 'temperature',
+        humField: 'humidity',
         points: 24,
       },
 
