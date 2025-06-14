@@ -123,12 +123,24 @@ export class MonitoringService {
 
     const notifs = await this.notificationModel
       .find({ status: 'unread' })
-      .sort({ timestamp: -1 })
-      .limit(5)
+      .sort({ timestamp: 1 })
       .lean()
       .exec();
 
-    const unreadNotifications = notifs.map((n) => ({
+    const filtered: typeof notifs = [];
+    const lastMap = new Map<string, Date>();
+    for (const n of notifs) {
+      const key = `${n.sensorId}-${n.type}`;
+      const last = lastMap.get(key);
+      if (!last || n.timestamp.getTime() - last.getTime() >= 10000) {
+        filtered.push(n);
+        lastMap.set(key, n.timestamp);
+      }
+    }
+
+    filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    const unreadNotifications = filtered.map((n) => ({
       id: n._id.toString(),
       type: n.type,
       message: n.message,
