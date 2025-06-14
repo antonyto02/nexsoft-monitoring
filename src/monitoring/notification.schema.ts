@@ -5,8 +5,8 @@ export type NotificationDocument = Notification & Document;
 
 @Schema({ collection: 'notifications' })
 export class Notification {
-  @Prop({ required: true, enum: ['gas', 'vibration'] })
-  type: 'gas' | 'vibration';
+  @Prop({ required: true, enum: ['Gas', 'Vibration'] })
+  type: 'Gas' | 'Vibration';
 
   @Prop({ required: true })
   sensorId: string;

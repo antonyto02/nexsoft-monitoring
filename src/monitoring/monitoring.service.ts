@@ -150,7 +150,7 @@ export class MonitoringService {
     page = 1,
     limit = 20,
   ) {
-    const allowedSensor = ['gas', 'vibration', 'all'];
+    const allowedSensor = ['Gas', 'Vibration', 'all'];
     const allowedStatus = ['read', 'unread', 'all'];
 
     if (!allowedSensor.includes(sensorType)) {
