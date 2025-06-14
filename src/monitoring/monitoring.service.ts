@@ -22,6 +22,7 @@ import {
   EnvironmentWeeklySummaryDocument,
 } from './environment-weekly-summary.schema';
 import { Notification, NotificationDocument } from './notification.schema';
+import { Status, StatusDocument } from './status.schema';
 
 interface FilterConfig {
   model: Model<any>;
@@ -46,6 +47,8 @@ export class MonitoringService {
     private readonly weeklyModel: Model<EnvironmentWeeklySummaryDocument>,
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    @InjectModel(Status.name)
+    private readonly statusModel: Model<StatusDocument>,
   ) {
     this.filterMap = {
       last_5min: {
@@ -171,6 +174,50 @@ export class MonitoringService {
       temperature: temp,
       humidity: hum,
       unread_notifications: unreadNotifications,
+    };
+  }
+
+  async getSensorsStatus() {
+    const now = Date.now();
+
+    const dht = await this.statusModel
+      .findOne({ sensorId: 'esp32_dht11' })
+      .sort({ timestamp: -1 })
+      .lean()
+      .exec();
+
+    const vibration = await this.statusModel
+      .findOne({ sensorId: 'esp32_vibration' })
+      .sort({ timestamp: -1 })
+      .lean()
+      .exec();
+
+    let envStatus: 'ok' | 'offline' = 'offline';
+    if (dht) {
+      const diff = now - new Date(dht.timestamp).getTime();
+      if (diff < 20000) {
+        envStatus = 'ok';
+      }
+    }
+
+    let vibrationStatus: 'ok' | 'offline' = 'offline';
+    if (vibration) {
+      const diff = now - new Date(vibration.timestamp).getTime();
+      if (diff < 20000) {
+        vibrationStatus = 'ok';
+      }
+    }
+
+    const sensors = [
+      { sensor: 'temperature', status: envStatus },
+      { sensor: 'humidity', status: envStatus },
+      { sensor: 'gas', status: envStatus },
+      { sensor: 'vibration', status: vibrationStatus },
+    ];
+
+    return {
+      message: 'Data retrieved successfully',
+      sensors,
     };
   }
 
