@@ -89,13 +89,31 @@ export class MonitoringService {
 
   async getTemperatureGraph(filter: string) {
     const result = await this.getData(filter, 'temperature');
+
+    const latest = await this.logModel
+      .findOne()
+      .sort({ timestamp: -1 })
+      .lean()
+      .exec();
+
+    const current = latest?.temperature ?? null;
+    const average =
+      result.average !== null && result.average !== undefined
+        ? parseFloat(result.average.toFixed(1))
+        : null;
+
+    const temperature = result.series.map((d) => ({
+      time: d.time,
+      value: parseFloat(d.value.toFixed(1)),
+    }));
+
     return {
       message: 'Data retrieved successfully',
-      current: result.current,
-      average: result.average,
+      current,
+      average,
       min: result.min,
       max: result.max,
-      temperature: result.series,
+      temperature,
     };
   }
 
