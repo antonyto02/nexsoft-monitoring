@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     ScheduleModule.forRoot(),
 
     MonitoringModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
