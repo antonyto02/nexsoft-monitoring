@@ -5,7 +5,7 @@ import { EnvironmentLog, EnvironmentLogDocument } from './environment-log.schema
 import { Notification, NotificationDocument } from './notification.schema';
 import { Status, StatusDocument } from './status.schema';
 import * as mqtt from 'mqtt';
-
+import * as fs from 'fs';
 
 @Injectable()
 export class AwsMqttService implements OnModuleInit {
@@ -26,20 +26,14 @@ export class AwsMqttService implements OnModuleInit {
 
   private connect() {
     console.log('⌛ Conectando a AWS IoT Core...');
-
-    const key = Buffer.from(process.env.DEVICE_KEY, 'utf-8');
-    const cert = Buffer.from(process.env.DEVICE_CERT, 'utf-8');
-    const ca = Buffer.from(process.env.CA_CERT, 'utf-8');
-
     this.client = mqtt.connect({
       host: 'a32p2sd11gkckn-ats.iot.us-east-2.amazonaws.com',
       port: 8883,
       protocol: 'mqtts',
-      key,
-      cert,
-      ca,
+      key: fs.readFileSync('./certs/device-key.pem.key'),
+      cert: fs.readFileSync('./certs/device-cert.pem.crt'),
+      ca: fs.readFileSync('./certs/AmazonRootCA1.pem'),
       clientId: 'nexsoft-monitoring',
-      rejectUnauthorized: true,
     });
 
     this.client.on('connect', () => {
@@ -78,7 +72,6 @@ export class AwsMqttService implements OnModuleInit {
       console.error('❌ Error de conexión:', err);
     });
   }
-
 
   private async saveData(data: any) {
     const { sensorId, temperature, humidity } = data || {};
