@@ -8,7 +8,8 @@ import { ConfigModule } from '@nestjs/config'; // ✅ IMPORTANTE
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // ✅ HABILITA EL USO DE .env
 
-    MongooseModule.forRoot('mongodb+srv://antonyto02:T6DfHvPfMLXLCu4k@nextsoft-cluster.k7wjxb9.mongodb.net/MonitoringDB?retryWrites=true&w=majority&appName=nextsoft-cluster'),
+    MongooseModule.forRoot(process.env.MONGO_URI!),
+
 
     MonitoringModule,
     AuthModule,

@@ -30,43 +30,61 @@ export class AwsMqttService implements OnModuleInit {
 
   private connect() {
     if (this.isConnected) {
-      console.log('⚠️ Ya conectado a AWS IoT Core, omitiendo reconexión.');
+      console.log('⚠️ Ya conectado, omitiendo reconexión.');
       return;
     }
 
-    console.log('⌛ Conectando a AWS IoT Core...');
+    const mode = process.env.MQTT_MODE || 'local';
 
-    const readCert = (envVar: string, fallbackPath: string): Buffer => {
-      const value = process.env[envVar];
-      if (value) {
-        console.log(`🔐 Usando certificado desde variable ${envVar}`);
-        return Buffer.from(value, 'utf-8');
-      }
-      console.log(`📄 Usando certificado desde archivo ${fallbackPath}`);
-      return fs.readFileSync(fallbackPath);
-    };
+    if (mode === 'local') {
+      console.log('🔌 Conectando a Mosquitto local...');
 
-    const key = readCert('DEVICE_KEY', './certs/device-key.pem.key');
-    const cert = readCert('DEVICE_CERT', './certs/device-cert.pem.crt');
-    const ca = readCert('CA_CERT', './certs/AmazonRootCA1.pem');
+      this.client = mqtt.connect({
+        host: process.env.MQTT_LOCAL_HOST || 'localhost',
+        port: Number(process.env.MQTT_LOCAL_PORT || 1883),
+        protocol: (process.env.MQTT_LOCAL_PROTOCOL as 'mqtt') || 'mqtt',
+        clientId: process.env.MQTT_LOCAL_CLIENT_ID || 'nexsoft-monitoring-local',
+        reconnectPeriod: 1000,
+      });
+    } else if (mode === 'prod') {
+      console.log('🔐 Conectando a AWS IoT Core...');
 
-    this.client = mqtt.connect({
-      host: 'a32p2sd11gkckn-ats.iot.us-east-2.amazonaws.com',
-      port: 8883,
-      protocol: 'mqtts',
-      key,
-      cert,
-      ca,
-      clientId: 'nexsoft-monitoring',
-      rejectUnauthorized: true,
-      reconnectPeriod: 0, // ✅ No reconecta automáticamente
-    });
+      const readCert = (envVar: string, fallbackPath: string): Buffer => {
+        const value = process.env[envVar];
+        if (value) {
+          console.log(`🔐 Usando certificado desde variable ${envVar}`);
+          return Buffer.from(value, 'utf-8');
+        }
+        console.log(`📄 Usando certificado desde archivo ${fallbackPath}`);
+        return fs.readFileSync(fallbackPath);
+      };
+
+      const key = readCert('DEVICE_KEY', './certs/device-key.pem.key');
+      const cert = readCert('DEVICE_CERT', './certs/device-cert.pem.crt');
+      const ca = readCert('CA_CERT', './certs/AmazonRootCA1.pem');
+
+      this.client = mqtt.connect({
+        host: process.env.MQTT_AWS_HOST,
+        port: Number(process.env.MQTT_AWS_PORT || 8883),
+        protocol: process.env.MQTT_AWS_PROTOCOL as 'mqtts',
+        key,
+        cert,
+        ca,
+        clientId: process.env.MQTT_AWS_CLIENT_ID || 'nexsoft-monitoring',
+        rejectUnauthorized: true,
+        reconnectPeriod: 0,
+      });
+    } else {
+      throw new Error(`❌ Modo MQTT desconocido: ${mode}`);
+    }
 
     this.client.on('connect', () => {
-      if (this.isConnected) return; // evita spam
+      if (this.isConnected) return;
       this.isConnected = true;
 
-      console.log('✅ Conectado a AWS IoT Core');
+      const label = mode === 'local' ? 'Mosquitto local' : 'AWS IoT Core';
+      console.log(`✅ Conectado a ${label}`);
+
       this.client.subscribe(
         [
           'nexsoft/monitoring/enviroment',
