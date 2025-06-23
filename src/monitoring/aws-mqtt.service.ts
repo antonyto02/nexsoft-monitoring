@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EnvironmentLog, EnvironmentLogDocument } from './environment-log.schema';
@@ -10,6 +10,7 @@ import * as fs from 'fs';
 @Injectable()
 export class AwsMqttService implements OnModuleInit {
   private client: mqtt.MqttClient;
+  private isConnected = false;
 
   constructor(
     @InjectModel(EnvironmentLog.name)
@@ -18,26 +19,36 @@ export class AwsMqttService implements OnModuleInit {
     private readonly notificationModel: Model<NotificationDocument>,
     @InjectModel(Status.name)
     private readonly statusModel: Model<StatusDocument>,
-  ) {}
+  ) {
+    console.log('🛠️ Constructor AwsMqttService');
+  }
 
   onModuleInit() {
+    console.log('🚀 onModuleInit AwsMqttService');
     this.connect();
   }
 
   private connect() {
+    if (this.isConnected) {
+      console.log('⚠️ Ya conectado a AWS IoT Core, omitiendo reconexión.');
+      return;
+    }
+
     console.log('⌛ Conectando a AWS IoT Core...');
 
-    const getEnvOrThrow = (name: string): string => {
-      const value = process.env[name];
-      if (!value) {
-        throw new Error(`❌ FALTA VARIABLE DE ENTORNO: ${name}`);
+    const readCert = (envVar: string, fallbackPath: string): Buffer => {
+      const value = process.env[envVar];
+      if (value) {
+        console.log(`🔐 Usando certificado desde variable ${envVar}`);
+        return Buffer.from(value, 'utf-8');
       }
-      return value;
+      console.log(`📄 Usando certificado desde archivo ${fallbackPath}`);
+      return fs.readFileSync(fallbackPath);
     };
 
-    const key = Buffer.from(getEnvOrThrow('DEVICE_KEY'), 'utf-8');
-    const cert = Buffer.from(getEnvOrThrow('DEVICE_CERT'), 'utf-8');
-    const ca = Buffer.from(getEnvOrThrow('CA_CERT'), 'utf-8');
+    const key = readCert('DEVICE_KEY', './certs/device-key.pem.key');
+    const cert = readCert('DEVICE_CERT', './certs/device-cert.pem.crt');
+    const ca = readCert('CA_CERT', './certs/AmazonRootCA1.pem');
 
     this.client = mqtt.connect({
       host: 'a32p2sd11gkckn-ats.iot.us-east-2.amazonaws.com',
@@ -48,9 +59,13 @@ export class AwsMqttService implements OnModuleInit {
       ca,
       clientId: 'nexsoft-monitoring',
       rejectUnauthorized: true,
+      reconnectPeriod: 0, // ✅ No reconecta automáticamente
     });
 
     this.client.on('connect', () => {
+      if (this.isConnected) return; // evita spam
+      this.isConnected = true;
+
       console.log('✅ Conectado a AWS IoT Core');
       this.client.subscribe(
         [
@@ -83,10 +98,9 @@ export class AwsMqttService implements OnModuleInit {
     });
 
     this.client.on('error', (err) => {
-      console.error('❌ Error de conexión:', err);
+      console.error('❌ Error de conexión MQTT:', err.message);
     });
   }
-
 
   private async saveData(data: any) {
     const { sensorId, temperature, humidity } = data || {};
@@ -122,7 +136,7 @@ export class AwsMqttService implements OnModuleInit {
       await this.notificationModel.create({
         type: 'Vibration',
         sensorId: 'Shock_sensor',
-        message: 'Movimiento brusco detetcado en caja',
+        message: 'Movimiento brusco detectado en caja',
         status: 'unread',
       });
     } else {
