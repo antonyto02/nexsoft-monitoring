@@ -162,7 +162,7 @@ export class MonitoringService {
     filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     const unreadNotifications = filtered.map((n) => ({
-      id: n._id.toString(),
+      id: String(n._id),
       type: n.type,
       message: n.message,
       status: n.status,
@@ -258,7 +258,7 @@ export class MonitoringService {
       .exec();
 
     const notifications = docs.map((d) => ({
-      id: d._id.toString(),
+      id: String(d._id),
       sensor: d.type,
       message: d.message,
       timestamp: d.timestamp.toISOString(),
