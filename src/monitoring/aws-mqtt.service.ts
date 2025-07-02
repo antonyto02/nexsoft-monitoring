@@ -102,21 +102,8 @@ export class AwsMqttService implements OnModuleInit {
       );
     });
 
-    this.client.on('message', async (topic, message) => {
-      const payload = message.toString();
-      console.log(`📥 ${topic}: ${payload}`);
-      try {
-        const data = JSON.parse(payload);
-        if (topic === 'nexsoft/monitoring/enviroment') {
-          await this.saveData(data);
-        } else if (topic === 'nexsoft/monitoring/notifications') {
-          await this.saveNotification(data);
-        } else if (topic === 'nexsoft/monitoring/status') {
-          await this.saveStatus(data);
-        }
-      } catch (err) {
-        console.error('❌ Error procesando el mensaje:', err.message);
-      }
+    this.client.on('message', (topic, message) => {
+      void this.handleMessage(topic, message);
     });
 
     this.client.on('error', (err) => {
@@ -124,8 +111,26 @@ export class AwsMqttService implements OnModuleInit {
     });
   }
 
-  private async saveData(data: any) {
-    const { sensorId, temperature, humidity } = data || {};
+  private async handleMessage(topic: string, message: Buffer): Promise<void> {
+    const payload = message.toString();
+    console.log(`📥 ${topic}: ${payload}`);
+    try {
+      const data: unknown = JSON.parse(payload);
+      if (topic === 'nexsoft/monitoring/enviroment') {
+        await this.saveData(data as Record<string, unknown>);
+      } else if (topic === 'nexsoft/monitoring/notifications') {
+        await this.saveNotification(data as Record<string, unknown>);
+      } else if (topic === 'nexsoft/monitoring/status') {
+        await this.saveStatus(data as Record<string, unknown>);
+      }
+    } catch (err) {
+      const error = err as Error;
+      console.error('❌ Error procesando el mensaje:', error.message);
+    }
+  }
+
+  private async saveData(data: Record<string, unknown>) {
+    const { sensorId, temperature, humidity } = data ?? {};
     if (
       typeof sensorId !== 'string' ||
       typeof temperature !== 'number' ||
@@ -136,10 +141,10 @@ export class AwsMqttService implements OnModuleInit {
     await this.logModel.create({ sensorId, temperature, humidity });
   }
 
-  private async saveNotification(data: any) {
-    const { sensorId } = data || {};
+  private async saveNotification(data: Record<string, unknown>) {
+    const { sensorId } = data ?? {};
     if (sensorId === 'esp32_mq2') {
-      const { value, gasDetected } = data;
+      const { value, gasDetected } = data as Record<string, unknown>;
       if (typeof value !== 'number' || gasDetected !== true) {
         throw new Error('Invalid gas notification payload');
       }
@@ -151,7 +156,7 @@ export class AwsMqttService implements OnModuleInit {
         status: 'unread',
       });
     } else if (sensorId === 'esp32_vibration') {
-      const { alert } = data;
+      const { alert } = data as Record<string, unknown>;
       if (alert !== 'shock_detected') {
         throw new Error('Invalid vibration notification payload');
       }
@@ -166,8 +171,8 @@ export class AwsMqttService implements OnModuleInit {
     }
   }
 
-  private async saveStatus(data: any) {
-    const { sensorId, status } = data || {};
+  private async saveStatus(data: Record<string, unknown>) {
+    const { sensorId, status } = data ?? {};
     if (typeof sensorId !== 'string' || typeof status !== 'string') {
       throw new Error('Invalid status payload');
     }
