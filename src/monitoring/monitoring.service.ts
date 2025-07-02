@@ -318,7 +318,9 @@ export class MonitoringService {
     const max = values.length > 0 ? Math.max(...values) : null;
 
     const series = docs.map((d) => ({
-      time: new Date(d[config.timeField] as string | number | Date).toISOString(),
+      time: new Date(
+        d[config.timeField] as string | number | Date,
+      ).toISOString(),
       value: d[valueField] as number,
     }));
 

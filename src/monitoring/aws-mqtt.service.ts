@@ -144,7 +144,7 @@ export class AwsMqttService implements OnModuleInit {
   private async saveNotification(data: Record<string, unknown>) {
     const { sensorId } = data ?? {};
     if (sensorId === 'esp32_mq2') {
-      const { value, gasDetected } = data as Record<string, unknown>;
+      const { value, gasDetected } = data;
       if (typeof value !== 'number' || gasDetected !== true) {
         throw new Error('Invalid gas notification payload');
       }
@@ -156,7 +156,7 @@ export class AwsMqttService implements OnModuleInit {
         status: 'unread',
       });
     } else if (sensorId === 'esp32_vibration') {
-      const { alert } = data as Record<string, unknown>;
+      const { alert } = data;
       if (alert !== 'shock_detected') {
         throw new Error('Invalid vibration notification payload');
       }
