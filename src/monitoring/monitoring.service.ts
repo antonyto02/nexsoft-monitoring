@@ -289,7 +289,7 @@ export class MonitoringService {
   }
 
   private async getData(filter: string, type: 'temperature' | 'humidity') {
-    const config = this.filterMap[filter as keyof typeof this.filterMap];
+    const config = this.filterMap[filter];
     if (!config) {
       throw new BadRequestException(
         'Invalid filter value. Allowed values: 24h, last_5min, last_week, last_month, last_3months',
@@ -321,7 +321,6 @@ export class MonitoringService {
       time: new Date(d[config.timeField]).toISOString(),
       value: d[valueField] as number,
     }));
-
 
     return { current, average, min, max, series };
   }

@@ -1,7 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { EnvironmentLog, EnvironmentLogDocument } from './environment-log.schema';
+import {
+  EnvironmentLog,
+  EnvironmentLogDocument,
+} from './environment-log.schema';
 import { Notification, NotificationDocument } from './notification.schema';
 import { Status, StatusDocument } from './status.schema';
 import * as mqtt from 'mqtt';
@@ -43,7 +46,8 @@ export class AwsMqttService implements OnModuleInit {
         host: process.env.MQTT_LOCAL_HOST || 'localhost',
         port: Number(process.env.MQTT_LOCAL_PORT || 1883),
         protocol: (process.env.MQTT_LOCAL_PROTOCOL as 'mqtt') || 'mqtt',
-        clientId: process.env.MQTT_LOCAL_CLIENT_ID || 'nexsoft-monitoring-local',
+        clientId:
+          process.env.MQTT_LOCAL_CLIENT_ID || 'nexsoft-monitoring-local',
         reconnectPeriod: 1000,
       });
     } else if (mode === 'prod') {

@@ -10,7 +10,6 @@ import { ConfigModule } from '@nestjs/config'; // ✅ IMPORTANTE
 
     MongooseModule.forRoot(process.env.MONGO_URI!),
 
-
     MonitoringModule,
     AuthModule,
   ],

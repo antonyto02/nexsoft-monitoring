@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type EnvironmentDailySummaryDocument = EnvironmentDailySummary & Document;
+export type EnvironmentDailySummaryDocument = EnvironmentDailySummary &
+  Document;
 
 @Schema({ collection: 'environment_daily_summary' })
 export class EnvironmentDailySummary {
@@ -15,4 +16,6 @@ export class EnvironmentDailySummary {
   avgHumidity: number;
 }
 
-export const EnvironmentDailySummarySchema = SchemaFactory.createForClass(EnvironmentDailySummary);
+export const EnvironmentDailySummarySchema = SchemaFactory.createForClass(
+  EnvironmentDailySummary,
+);
