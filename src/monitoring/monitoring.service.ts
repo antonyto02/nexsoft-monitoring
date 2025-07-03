@@ -288,6 +288,24 @@ export class MonitoringService {
     }
   }
 
+  async getSummary(includeTimestamp = false) {
+    const doc = await this.logModel
+      .findOne()
+      .sort({ timestamp: -1 })
+      .lean()
+      .exec();
+
+    if (!doc) {
+      return includeTimestamp
+        ? { temperature: null, timestamp: null }
+        : { temperature: null };
+    }
+
+    return includeTimestamp
+      ? { temperature: doc.temperature, timestamp: doc.timestamp.toISOString() }
+      : { temperature: doc.temperature };
+  }
+
   private async getData(filter: string, type: 'temperature' | 'humidity') {
     const config = this.filterMap[filter];
     if (!config) {
