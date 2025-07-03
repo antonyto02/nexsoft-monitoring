@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   EnvironmentLog,
   EnvironmentLogDocument,
@@ -162,7 +162,7 @@ export class MonitoringService {
     filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     const unreadNotifications = filtered.map((n) => ({
-      id: n._id.toString(),
+      id: (n._id as Types.ObjectId).toString(),
       type: n.type,
       message: n.message,
       status: n.status,
@@ -258,7 +258,7 @@ export class MonitoringService {
       .exec();
 
     const notifications = docs.map((d) => ({
-      id: d._id.toString(),
+      id: (d._id as Types.ObjectId).toString(),
       sensor: d.type,
       message: d.message,
       timestamp: d.timestamp.toISOString(),
@@ -318,7 +318,7 @@ export class MonitoringService {
     const max = values.length > 0 ? Math.max(...values) : null;
 
     const series = docs.map((d) => ({
-      time: new Date(d[config.timeField]).toISOString(),
+      time: new Date(d[config.timeField] as string | number | Date).toISOString(),
       value: d[valueField] as number,
     }));
 
