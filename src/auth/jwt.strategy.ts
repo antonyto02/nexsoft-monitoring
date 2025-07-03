@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-@Injectable()
 export interface JwtPayload {
   sub: string;
   username: string;
@@ -10,6 +9,7 @@ export interface JwtPayload {
   exp?: number;
 }
 
+@Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
