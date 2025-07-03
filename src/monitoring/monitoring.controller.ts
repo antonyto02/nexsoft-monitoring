@@ -36,6 +36,12 @@ export class MonitoringController {
     return this.monitoringService.getSensorsStatus();
   }
 
+  @Get('summary')
+  getSummary(@Query('include_timestamp') includeTimestamp?: string) {
+    const include = includeTimestamp === 'true';
+    return this.monitoringService.getSummary(include);
+  }
+
   @Get('notifications')
   getNotifications(
     @Query('sensor_type') sensorType?: string,
