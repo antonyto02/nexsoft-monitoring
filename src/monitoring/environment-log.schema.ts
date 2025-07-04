@@ -18,4 +18,5 @@ export class EnvironmentLog {
   timestamp: Date;
 }
 
-export const EnvironmentLogSchema = SchemaFactory.createForClass(EnvironmentLog);
+export const EnvironmentLogSchema =
+  SchemaFactory.createForClass(EnvironmentLog);
